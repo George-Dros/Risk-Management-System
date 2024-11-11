@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from scipy.stats import norm
+from fbm import FBM
 
 def portfolio_return(weights, returns):
     """
@@ -29,6 +30,21 @@ def annualize_rets(r, periods_per_year):
     compounded_growth = (1+r).prod()
     n_periods = r.shape[0]
     return compounded_growth**(periods_per_year/n_periods)-1
+
+def compound_returns(s, start=100):
+    '''
+    Compound a pd.Dataframe or pd.Series of returns from an initial default value equal to 100.
+    In the former case, the method compounds the returns for every column (Series) by using pd.aggregate. 
+    The method returns a pd.Dataframe or pd.Series - using cumprod(). 
+    See also the COMPOUND method.
+    '''
+    if isinstance(s, pd.DataFrame):
+        return s.aggregate( compound_returns, start=start )
+    elif isinstance(s, pd.Series):
+        return start * (1 + s).cumprod()
+    else:
+        raise TypeError("Expected pd.DataFrame or pd.Series")
+
 
 def var_historic(r, level=5):
     """
@@ -124,11 +140,11 @@ def cvar_gaussian(r, level=5, modified=False):
 
 
 
-def drawdown(rets: pd.Series, start=1000):
+def drawdown(rets: pd.Series, start=100):
     '''
     Compute the drawdowns of an input pd.Series of returns. 
     The method returns a dataframe containing: 
-    1. the associated wealth index (for an hypothetical starting investment of $1000) 
+    1. the associated wealth index (for an hypothetical starting investment of $100) 
     2. all previous peaks 
     3. the drawdowns
     '''
@@ -137,3 +153,6 @@ def drawdown(rets: pd.Series, start=1000):
     drawdowns      = (wealth_index - previous_peaks ) / previous_peaks
     df = pd.DataFrame({"Wealth": wealth_index, "Peaks": previous_peaks, "Drawdown": drawdowns} )
     return df
+
+
+
