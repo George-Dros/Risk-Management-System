@@ -59,3 +59,10 @@ A comprehensive framework for analyzing the risk of a diversified portfolio. Thi
 3. Run the Jupyter Notebook or script:
    ```bash
    jupyter main.ipynb
+
+
+## **Future Enhancements**
+
+ * Include machine learning models for risk prediction.
+ * Add support for multi-asset class portfolios (e.g., crypto, real estate).
+ * Automate data fetching using APIs like Yahoo Finance.t
