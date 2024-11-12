@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from scipy.stats import norm
-from fbm import FBM
+import matplotlib.pyplot as plt
 
 def portfolio_return(weights, returns):
     """
@@ -139,7 +139,6 @@ def cvar_gaussian(r, level=5, modified=False):
     return cvar
 
 
-
 def drawdown(rets: pd.Series, start=100):
     '''
     Compute the drawdowns of an input pd.Series of returns. 
@@ -155,4 +154,79 @@ def drawdown(rets: pd.Series, start=100):
     return df
 
 
+def monte_carlo_simulation(daily_returns, covariance_matrix, portfolio_weights, 
+                           monte_carlo_sims=1000, t=100, initial_portfolio=1000):
+    """
+    Perform a Monte Carlo simulation to project portfolio value over time and return final portfolio values.
+
+    Parameters:
+    - daily_returns (numpy array): Historical daily returns of the assets.
+    - covariance_matrix (numpy array): Covariance matrix of asset returns.
+    - portfolio_weights (numpy array): Weights of the assets in the portfolio.
+    - monte_carlo_sims (int): Number of Monte Carlo simulations (default: 1000).
+    - t (int): Number of days to simulate (default: 100).
+    - initial_portfolio (float): Initial portfolio value (default: 1000).
+
+    Returns:
+    - final_portfolio_values (numpy array): Final portfolio values from all Monte Carlo simulations.
+    - None (generates and displays a plot of portfolio value paths).
+    """
+    # Calculate the mean returns of the assets
+    mean_returns = daily_returns.mean()
+    
+    # Create a matrix of mean returns for the simulation period
+    mean_m = np.full(shape=(t, len(portfolio_weights)), fill_value=mean_returns).T
+    
+    # Initialize an array to store the portfolio simulation results
+    portfolio_sims = np.full(shape=(t, monte_carlo_sims), fill_value=0.0)
+
+    # Monte Carlo Simulation Loop
+    for m in range(monte_carlo_sims):
+       
+        Z = np.random.normal(size=(t, len(portfolio_weights)))
+        L = np.linalg.cholesky(covariance_matrix)
+        monte_carlo_daily_returns = mean_m + np.inner(L, Z)
+        portfolio_sims[:, m] = np.cumprod(np.inner(portfolio_weights, monte_carlo_daily_returns.T) + 1) * initial_portfolio
+
+    # Extract the final portfolio values
+    final_portfolio_values = portfolio_sims[-1, :]  # Last row contains the final portfolio value for each simulation
+
+    # Plot the results
+    plt.figure(figsize=(12, 6))
+    plt.plot(portfolio_sims, color="blue", alpha=0.4)  # Plot all simulation paths
+    plt.ylabel("Portfolio Value ($)")
+    plt.xlabel("Days")
+    plt.title("Monte Carlo Simulation of a Stock Portfolio")
+    plt.show()
+
+    # Return the final portfolio values for further analysis
+    return final_portfolio_values
+
+
+def sharpe_ratio(s, risk_free_rate, periods_per_year, v=None):
+    '''
+    Computes the annualized sharpe ratio. 
+    The variable periods_per_year can be, e.g., 12, 52, 252, in case of yearly, weekly, and daily data.
+    The variable risk_free_rate is the annual one.
+    The method takes in input either a DataFrame, a Series or a single number. 
+    In the former case, it computes the annualized sharpe ratio of every column (Series) by using pd.aggregate. 
+    In the latter case, s is the (allready annualized) return and v is the (already annualized) volatility 
+    computed beforehand, for example, in case of a portfolio.
+    '''
+    if isinstance(s, pd.DataFrame):
+        return s.aggregate( sharpe_ratio, risk_free_rate=risk_free_rate, periods_per_year=periods_per_year, v=None)
+    elif isinstance(s, pd.Series):
+        # convert the annual risk free rate to the period assuming that:
+        # RFR_year = (1+RFR_period)^{periods_per_year} - 1. Hence:
+        rf_to_period = (1 + risk_free_rate)**(1/periods_per_year) - 1        
+        excess_return = s - rf_to_period
+        # now, annualize the excess return
+        ann_ex_rets = annualize_rets(excess_return, periods_per_year)
+        # compute annualized volatility
+        ann_vol = annualize_vol(s, periods_per_year)
+        return ann_ex_rets / ann_vol
+    elif isinstance(s, (int,float)) and v is not None:
+        # Portfolio case: s is supposed to be the single (already annnualized) 
+        # return of the portfolio and v to be the single (already annualized) volatility. 
+        return (s - risk_free_rate) / v
 
