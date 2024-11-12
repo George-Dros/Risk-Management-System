@@ -1,6 +1,6 @@
 # **Risk Management System**
 
-A comprehensive framework for analyzing the risk of a diversified portfolio. This project calculates key risk metrics such as Value at Risk (VaR), Conditional VaR (CVaR), and Maximum Drawdown (MDD). It also includes stress testing (e.g., COVID-19 crash, hypothetical scenarios) and Monte Carlo simulations to assess portfolio resilience and diversification benefits.
+ A framework for analyzing portfolio risk with metrics like VaR, CVaR, and Maximum Drawdown. Includes a stress test (COVID-19 crash, and Monte Carlo simulations to assess diversification and portfolio resilience. 
 
 ---
 
