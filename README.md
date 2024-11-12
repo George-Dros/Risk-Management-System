@@ -42,7 +42,7 @@
 - **Python Libraries**:
   - `pandas` for data manipulation.
   - `numpy` for numerical operations.
-  - `matplotlib` and `seaborn` for visualizations.
+  - `matplotlib` for visualizations.
   - `scipy.stats` for statistical analysis.
   
 ---
